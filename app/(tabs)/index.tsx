@@ -66,7 +66,7 @@ export default function IndexScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>My Reminders</Text>
+      <Text style={styles.title}>Reminders</Text>
 
       <TextInput
         style={styles.input}
