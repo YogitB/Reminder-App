@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 export default function ExploreScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Explore Screen</Text>
+      <Text style={styles.text}>Work In Progress</Text>
     </View>
   );
 }
