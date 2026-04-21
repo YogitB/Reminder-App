@@ -10,21 +10,23 @@ const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
+    text: '#2A0A4A',
+    background: '#F7F2FF',
+    tint: '#6A0DAD',
+    icon: '#7E57C2',
+    tabIconDefault: '#7E57C2',
+    tabIconSelected: '#6A0DAD',
+},
+
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: '#EDE7F6',            // soft lavender text
+    background: '#1A0B2E',      // deep purple-black
+    tint: '#BB86FC',            // accent purple
+    icon: '#C7A4FF',            // lighter purple icons
+    tabIconDefault: '#9A73C9',  // muted purple
+    tabIconSelected: '#BB86FC', // bright accent purple
   },
+
 };
 
 export const Fonts = Platform.select({
