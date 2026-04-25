@@ -12,6 +12,7 @@ export const Colors = {
   light: {
     text: '#2A0A4A',
     background: '#F7F2FF',
+    card: '#E8D9FF',
     tint: '#6A0DAD',
     icon: '#7E57C2',
     tabIconDefault: '#7E57C2',
@@ -20,7 +21,8 @@ export const Colors = {
 
   dark: {
     text: '#EDE7F6',            // soft lavender text
-    background: '#1A0B2E',      // deep purple-black
+    background: '#1A0B2E',
+    card: '#2A0A4A',      // deep purple-black
     tint: '#BB86FC',            // accent purple
     icon: '#C7A4FF',            // lighter purple icons
     tabIconDefault: '#9A73C9',  // muted purple

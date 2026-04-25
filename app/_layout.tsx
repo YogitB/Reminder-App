@@ -1,24 +1,40 @@
+import { DarkTheme, DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { Stack } from "expo-router";
-import { useColorScheme } from 'react-native';
+import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Colors } from '../constants/theme';
+import { Colors } from "../constants/theme";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+
+  const baseTheme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
+
+  const theme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      ...Colors[colorScheme ?? "light"],
+
+      primary: Colors[colorScheme ?? "light"].tint,
+      notification: Colors[colorScheme ?? "light"].tint,
+      border: "transparent",
+    },
+  };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.background }}>
-      <Stack
-        screenOptions={{
-          contentStyle: { backgroundColor: theme.background },
-          headerStyle: { backgroundColor: theme.background },
-          headerTintColor: theme.text,
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(modals)/modal" options={{ presentation: "modal" }} />
-      </Stack>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer theme={theme}>
+        <Stack
+          screenOptions={{
+            contentStyle: { backgroundColor: theme.colors.background },
+            headerStyle: { backgroundColor: theme.colors.background },
+            headerTintColor: theme.colors.text,
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(modals)/modal" options={{ presentation: "modal" }} />
+        </Stack>
+      </NavigationContainer>
     </GestureHandlerRootView>
   );
 }

@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from '@react-navigation/native';
 import Checkbox from "expo-checkbox";
 import React, { useEffect, useState } from "react";
 import {
@@ -18,6 +19,9 @@ type Reminder = {
 };
 
 export default function IndexScreen() {
+  const { colors } = useTheme();
+  const themedStyles = styles(colors);
+
   const [reminder, setReminder] = useState("");
   const [reminders, setReminders] = useState<Reminder[]>([]);
 
@@ -57,21 +61,21 @@ export default function IndexScreen() {
   };
 
   const renderRightActions = (id: string) => (
-    <View style={styles.deleteBox}>
-      <Text style={styles.deleteText} onPress={() => deleteReminder(id)}>
+    <View style={themedStyles.deleteBox}>
+      <Text style={themedStyles.deleteText} onPress={() => deleteReminder(id)}>
         Delete
       </Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Reminders</Text>
+    <View style={themedStyles.container}>
+      <Text style={themedStyles.title}>Reminders</Text>
 
       <TextInput
-        style={styles.input}
+        style={themedStyles.input}
         placeholder="Enter a reminder..."
-        placeholderTextColor="#777"
+        placeholderTextColor={colors.icon}
         value={reminder}
         onChangeText={setReminder}
       />
@@ -81,72 +85,87 @@ export default function IndexScreen() {
       <FlatList
         data={reminders}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
-          console.log("Rendering item:", item.text);
-
-          return (
-            <Swipeable
-              overshootRight={false}
-              renderRightActions={() => renderRightActions(item.id)}
-            >
-              <View style={styles.card}>
-                <Checkbox
-                  value={item.completed}
-                  onValueChange={() => toggleComplete(item.id)}
-                  color={item.completed ? "#4CAF50" : "#fff"}
-                />
-                <Text
-                  style={[
-                    styles.cardText,
-                    item.completed && {
-                      textDecorationLine: "line-through",
-                      opacity: 0.5,
-                    },
-                  ]}
-                >
-                  {item.text}
-                </Text>
-              </View>
-            </Swipeable>
-          );
-        }}
+        renderItem={({ item }) => (
+          <Swipeable
+            overshootRight={false}
+            renderRightActions={() => renderRightActions(item.id)}
+          >
+            <View style={themedStyles.card}>
+              <Checkbox
+                value={item.completed}
+                onValueChange={() => toggleComplete(item.id)}
+                color={item.completed ? "#4CAF50" : colors.tint}
+              />
+              <Text
+                style={[
+                  themedStyles.cardText,
+                  item.completed && {
+                    textDecorationLine: "line-through",
+                    opacity: 0.5,
+                  },
+                ]}
+              >
+                {item.text}
+              </Text>
+            </View>
+          </Swipeable>
+        )}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: "black" },
-  title: { fontSize: 28, fontWeight: "bold", marginBottom: 20, color: "white" },
-  input: {
-    borderWidth: 1,
-    borderColor: "#555",
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-    backgroundColor: "#111",
-    color: "white",
-  },
-  card: {
-    backgroundColor: "#222",
-    padding: 15,
-    marginVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#444",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  cardText: { color: "white", fontSize: 18, flex: 1 },
-  deleteBox: {
-    backgroundColor: "red",
-    justifyContent: "center",
-    alignItems: "flex-end",
-    paddingHorizontal: 20,
-    marginVertical: 8,
-    borderRadius: 8,
-    width: 100,
-  },
-  deleteText: { color: "white", fontWeight: "bold", fontSize: 16 },
-});
+const styles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      paddingTop: 60,
+      backgroundColor: colors.background,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "bold",
+      marginBottom: 20,
+      color: colors.text,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.icon,
+      padding: 10,
+      marginBottom: 10,
+      borderRadius: 5,
+      backgroundColor: colors.card,
+      color: colors.text,
+    },
+    card: {
+      backgroundColor: colors.card,
+      padding: 15,
+      marginVertical: 8,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.icon,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    cardText: {
+      color: colors.text,
+      fontSize: 18,
+      flex: 1,
+    },
+    deleteBox: {
+      backgroundColor: "#FF3B30",
+      justifyContent: "center",
+      alignItems: "flex-end",
+      paddingHorizontal: 20,
+      marginVertical: 8,
+      borderRadius: 8,
+      width: 100,
+    },
+    deleteText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+  });
