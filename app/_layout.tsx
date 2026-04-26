@@ -3,7 +3,22 @@ import { Stack } from "expo-router";
 import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Colors } from "../constants/theme";
+declare module '@react-navigation/native'{
+  export type Theme={
+    dark:boolean;
+    colors: {
+      primary: string;
+      background: string;
+      card: string;
+      text: string;
+      border: string;
+      notification: string;
+      icon: string;
+      tint: string;
 
+    }
+  }
+}
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
