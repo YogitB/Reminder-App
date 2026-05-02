@@ -1,13 +1,14 @@
+import { SpaceGrotesk_400Regular, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold, useFonts } from '@expo-google-fonts/space-grotesk';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from '@react-navigation/native';
 import Checkbox from "expo-checkbox";
 import React, { useEffect, useState } from "react";
 import {
-  Button,
   FlatList,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
@@ -20,7 +21,7 @@ type Reminder = {
 
 export default function IndexScreen() {
   const { colors } = useTheme();
-  const themedStyles = styles(colors);
+  const [fontsLoaded] = useFonts({ SpaceGrotesk_400Regular, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold });  const themedStyles = styles(colors);
 
   const [reminder, setReminder] = useState("");
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -39,12 +40,10 @@ export default function IndexScreen() {
 
   const addReminder = () => {
     if (!reminder.trim()) return;
-
     setReminders((prev) => [
       ...prev,
       { id: Date.now().toString(), text: reminder.trim(), completed: false },
     ]);
-
     setReminder("");
   };
 
@@ -54,9 +53,7 @@ export default function IndexScreen() {
 
   const toggleComplete = (id: string) => {
     setReminders((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, completed: !r.completed } : r
-      )
+      prev.map((r) => (r.id === id ? { ...r, completed: !r.completed } : r))
     );
   };
 
@@ -67,6 +64,8 @@ export default function IndexScreen() {
       </Text>
     </View>
   );
+
+  if (!fontsLoaded) return null;
 
   return (
     <View style={themedStyles.container}>
@@ -80,7 +79,9 @@ export default function IndexScreen() {
         onChangeText={setReminder}
       />
 
-      <Button title="Add Reminder" onPress={addReminder} />
+      <TouchableOpacity style={themedStyles.button} onPress={addReminder}>
+        <Text style={themedStyles.buttonText}>Add Reminder</Text>
+      </TouchableOpacity>
 
       <FlatList
         data={reminders}
@@ -125,24 +126,38 @@ const styles = (colors: any) =>
     },
     title: {
       fontSize: 28,
-      fontWeight: "bold",
+      fontFamily: 'Urbanist_800ExtraBold',
       marginBottom: 20,
       color: colors.text,
     },
     input: {
       borderWidth: 1,
       borderColor: colors.icon,
-      padding: 10,
+      padding: 12,
       marginBottom: 10,
-      borderRadius: 5,
+      borderRadius: 10,
       backgroundColor: colors.card,
       color: colors.text,
+      fontFamily: 'Urbanist_400Regular',
+      fontSize: 16,
+    },
+    button: {
+      backgroundColor: colors.tint,
+      padding: 14,
+      borderRadius: 10,
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    buttonText: {
+      color: 'white',
+      fontFamily: 'Urbanist_600SemiBold',
+      fontSize: 16,
     },
     card: {
       backgroundColor: colors.card,
       padding: 15,
       marginVertical: 8,
-      borderRadius: 8,
+      borderRadius: 10,
       borderWidth: 1,
       borderColor: colors.icon,
       flexDirection: "row",
@@ -151,7 +166,8 @@ const styles = (colors: any) =>
     },
     cardText: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: 16,
+      fontFamily: 'Urbanist_400Regular',
       flex: 1,
     },
     deleteBox: {
@@ -160,12 +176,12 @@ const styles = (colors: any) =>
       alignItems: "flex-end",
       paddingHorizontal: 20,
       marginVertical: 8,
-      borderRadius: 8,
+      borderRadius: 10,
       width: 100,
     },
     deleteText: {
       color: "white",
-      fontWeight: "bold",
+      fontFamily: 'Urbanist_600SemiBold',
       fontSize: 16,
     },
   });

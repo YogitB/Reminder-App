@@ -1,8 +1,12 @@
-import { DarkTheme, DefaultTheme, NavigationContainer } from "@react-navigation/native";
+import { Inter_400Regular, Inter_600SemiBold, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
+import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Colors } from "../constants/theme";
+SplashScreen.preventAutoHideAsync();
 declare module '@react-navigation/native'{
   export type Theme={
     dark:boolean;
@@ -20,6 +24,16 @@ declare module '@react-navigation/native'{
   }
 }
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_600SemiBold,
+    Inter_700Bold,
+
+  })
+  useEffect(()=>{
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+  if (!fontsLoaded) return null;
   const colorScheme = useColorScheme();
 
   const baseTheme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
@@ -38,7 +52,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer theme={theme}>
+      <ThemeProvider value={theme}>
         <Stack
           screenOptions={{
             contentStyle: { backgroundColor: theme.colors.background },
@@ -49,7 +63,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(modals)/modal" options={{ presentation: "modal" }} />
         </Stack>
-      </NavigationContainer>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
