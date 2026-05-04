@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '@react-navigation/native';
 import Checkbox from "expo-checkbox";
+import * as Notifications from 'expo-notifications';
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
@@ -26,7 +27,8 @@ type Reminder = {
   notes?: string;
 };
 
-export default function IndexScreen() {
+export default async function IndexScreen() {
+  const { status } = await Notifications.requestPermissionsAsync();
   const { colors } = useTheme();
   const [fontsLoaded] = useFonts({ SpaceGrotesk_400Regular, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold });
   const themedStyles = styles(colors);
@@ -34,20 +36,32 @@ export default function IndexScreen() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Form state
+  // Declaring the due date and everything else
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState(new Date());
   const [dueTime, setDueTime] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-
   useEffect(() => {
     const load = async () => {
       const stored = await AsyncStorage.getItem("reminders");
       if (stored) setReminders(JSON.parse(stored));
     };
     load();
+  }, []);
+  const due = new Date();
+  due.setHours(9,30,0); // 9:30AM
+  const soon= new Date(Date.now() + 30000);
+  useEffect(() => {
+    const requestPermissions= async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !=='granted') {
+        alert ("Enable notifications in settings to get reminder alerts.");
+
+      }
+    };
+    requestPermissions();
   }, []);
 
   useEffect(() => {
@@ -68,7 +82,13 @@ export default function IndexScreen() {
         notes: notes.trim(),
       },
     ]);
-
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
     // Reset form
     setTitle("");
     setNotes("");
@@ -178,7 +198,7 @@ export default function IndexScreen() {
           <Text style={themedStyles.label}>Time</Text>
           <TouchableOpacity style={themedStyles.pickerButton} onPress={() => setShowTimePicker(true)}>
             <Text style={themedStyles.pickerButtonText}>
-              🕐 {dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              🕐{dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </TouchableOpacity>
           {showTimePicker && (
