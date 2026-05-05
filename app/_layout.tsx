@@ -28,22 +28,24 @@ export default function RootLayout() {
     Inter_400Regular,
     Inter_600SemiBold,
     Inter_700Bold,
+  });
 
-  })
-  useEffect(()=>{
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
-  if (!fontsLoaded) return null;
+  // ✅ useColorScheme must be before any early return
   const colorScheme = useColorScheme();
 
-  const baseTheme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
 
+  // ✅ early return goes after all hooks
+  if (!fontsLoaded) return null;
+
+  const baseTheme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
   const theme = {
     ...baseTheme,
     colors: {
       ...baseTheme.colors,
       ...Colors[colorScheme ?? "light"],
-
       primary: Colors[colorScheme ?? "light"].tint,
       notification: Colors[colorScheme ?? "light"].tint,
       border: "transparent",

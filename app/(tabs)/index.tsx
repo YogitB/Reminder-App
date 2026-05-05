@@ -27,22 +27,32 @@ type Reminder = {
   notes?: string;
 };
 
-export default async function IndexScreen() {
-  const { status } = await Notifications.requestPermissionsAsync();
+// ✅ Outside the component, runs once at app startup
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+// ✅ No longer async
+export default function IndexScreen() {
   const { colors } = useTheme();
   const [fontsLoaded] = useFonts({ SpaceGrotesk_400Regular, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold });
-  const themedStyles = styles(colors);
 
+  // ✅ All hooks declared first, before any functions that use them
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-
-  // Declaring the due date and everything else
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState(new Date());
   const [dueTime, setDueTime] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
   useEffect(() => {
     const load = async () => {
       const stored = await AsyncStorage.getItem("reminders");
@@ -50,15 +60,12 @@ export default async function IndexScreen() {
     };
     load();
   }, []);
-  const due = new Date();
-  due.setHours(9,30,0); // 9:30AM
-  const soon= new Date(Date.now() + 30000);
-  useEffect(() => {
-    const requestPermissions= async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !=='granted') {
-        alert ("Enable notifications in settings to get reminder alerts.");
 
+  useEffect(() => {
+    const requestPermissions = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        alert("Enable notifications in settings to get reminder alerts.");
       }
     };
     requestPermissions();
@@ -68,9 +75,26 @@ export default async function IndexScreen() {
     AsyncStorage.setItem("reminders", JSON.stringify(reminders));
   }, [reminders]);
 
-  const addReminder = () => {
+  // ✅ Single scheduleNotification helper
+  const scheduleNotification = async (title: string, notes: string, date: Date, time: Date) => {
+    const trigger = new Date(date);
+    trigger.setHours(time.getHours(), time.getMinutes(), 0, 0);
+    if (trigger <= new Date()) return;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Reminder",
+        body: title,
+        subtitle: notes || undefined,
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: trigger,
+      },
+    });
+  };
+  const addReminder = async () => {
     if (!title.trim()) return;
-
     setReminders((prev) => [
       ...prev,
       {
@@ -82,14 +106,7 @@ export default async function IndexScreen() {
         notes: notes.trim(),
       },
     ]);
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-      }),
-    });
-    // Reset form
+    await scheduleNotification(title, notes, dueDate, dueTime);
     setTitle("");
     setNotes("");
     setDueDate(new Date());
@@ -114,6 +131,7 @@ export default async function IndexScreen() {
       </Text>
     </View>
   );
+  const themedStyles = styles(colors);
 
   if (!fontsLoaded) return null;
 
@@ -121,12 +139,10 @@ export default async function IndexScreen() {
     <View style={themedStyles.container}>
       <Text style={themedStyles.title}>Reminders</Text>
 
-      {/* Add Button */}
       <TouchableOpacity style={themedStyles.button} onPress={() => setModalVisible(true)}>
         <Text style={themedStyles.buttonText}>+ Add Reminder</Text>
       </TouchableOpacity>
 
-      {/* Reminders List */}
       <FlatList
         data={reminders}
         keyExtractor={(item) => item.id}
@@ -162,7 +178,6 @@ export default async function IndexScreen() {
         )}
       />
 
-      {/* Add Reminder Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -198,7 +213,7 @@ export default async function IndexScreen() {
           <Text style={themedStyles.label}>Time</Text>
           <TouchableOpacity style={themedStyles.pickerButton} onPress={() => setShowTimePicker(true)}>
             <Text style={themedStyles.pickerButtonText}>
-              🕐{dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              🕐 {dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </TouchableOpacity>
           {showTimePicker && (
@@ -235,123 +250,22 @@ export default async function IndexScreen() {
 
 const styles = (colors: any) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 20,
-      paddingTop: 60,
-      backgroundColor: colors.background,
-    },
-    title: {
-      fontSize: 28,
-      fontFamily: 'SpaceGrotesk_700Bold',
-      marginBottom: 20,
-      color: colors.text,
-    },
-    button: {
-      backgroundColor: colors.tint,
-      padding: 14,
-      borderRadius: 10,
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    buttonText: {
-      color: 'white',
-      fontFamily: 'SpaceGrotesk_600SemiBold',
-      fontSize: 16,
-    },
-    card: {
-      backgroundColor: colors.card,
-      padding: 15,
-      marginVertical: 8,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.icon,
-      flexDirection: "row",
-      alignItems: "flex-start",
-      gap: 10,
-    },
-    cardText: {
-      color: colors.text,
-      fontSize: 16,
-      fontFamily: 'SpaceGrotesk_600SemiBold',
-    },
-    cardMeta: {
-      color: colors.icon,
-      fontSize: 12,
-      fontFamily: 'SpaceGrotesk_400Regular',
-      marginTop: 4,
-    },
-    cardNotes: {
-      color: colors.text,
-      fontSize: 13,
-      fontFamily: 'SpaceGrotesk_400Regular',
-      marginTop: 4,
-      opacity: 0.7,
-    },
-    deleteBox: {
-      backgroundColor: "#FF3B30",
-      justifyContent: "center",
-      alignItems: "flex-end",
-      paddingHorizontal: 20,
-      marginVertical: 8,
-      borderRadius: 10,
-      width: 100,
-    },
-    deleteText: {
-      color: "white",
-      fontFamily: 'SpaceGrotesk_600SemiBold',
-      fontSize: 16,
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-    },
-    modalContent: {
-      backgroundColor: colors.card,
-      padding: 24,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-    },
-    modalTitle: {
-      fontSize: 22,
-      fontFamily: 'SpaceGrotesk_700Bold',
-      color: colors.text,
-      marginBottom: 16,
-    },
-    label: {
-      fontFamily: 'SpaceGrotesk_600SemiBold',
-      fontSize: 14,
-      color: colors.text,
-      marginBottom: 6,
-      marginTop: 12,
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: colors.icon,
-      padding: 12,
-      borderRadius: 10,
-      backgroundColor: colors.background,
-      color: colors.text,
-      fontFamily: 'SpaceGrotesk_400Regular',
-      fontSize: 15,
-    },
-    pickerButton: {
-      borderWidth: 1,
-      borderColor: colors.icon,
-      padding: 12,
-      borderRadius: 10,
-      backgroundColor: colors.background,
-    },
-    pickerButtonText: {
-      color: colors.text,
-      fontFamily: 'SpaceGrotesk_400Regular',
-      fontSize: 15,
-    },
-    cancelText: {
-      color: colors.icon,
-      fontFamily: 'SpaceGrotesk_400Regular',
-      textAlign: 'center',
-      marginTop: 12,
-      fontSize: 15,
-    },
+    container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: colors.background },
+    title: { fontSize: 28, fontFamily: 'SpaceGrotesk_700Bold', marginBottom: 20, color: colors.text },
+    button: { backgroundColor: colors.tint, padding: 14, borderRadius: 10, alignItems: 'center', marginBottom: 16 },
+    buttonText: { color: 'white', fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 16 },
+    card: { backgroundColor: colors.card, padding: 15, marginVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: colors.icon, flexDirection: "row", alignItems: "flex-start", gap: 10 },
+    cardText: { color: colors.text, fontSize: 16, fontFamily: 'SpaceGrotesk_600SemiBold' },
+    cardMeta: { color: colors.icon, fontSize: 12, fontFamily: 'SpaceGrotesk_400Regular', marginTop: 4 },
+    cardNotes: { color: colors.text, fontSize: 13, fontFamily: 'SpaceGrotesk_400Regular', marginTop: 4, opacity: 0.7 },
+    deleteBox: { backgroundColor: "#FF3B30", justifyContent: "center", alignItems: "flex-end", paddingHorizontal: 20, marginVertical: 8, borderRadius: 10, width: 100 },
+    deleteText: { color: "white", fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 16 },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+    modalContent: { backgroundColor: colors.card, padding: 24, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+    modalTitle: { fontSize: 22, fontFamily: 'SpaceGrotesk_700Bold', color: colors.text, marginBottom: 16 },
+    label: { fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 14, color: colors.text, marginBottom: 6, marginTop: 12 },
+    input: { borderWidth: 1, borderColor: colors.icon, padding: 12, borderRadius: 10, backgroundColor: colors.background, color: colors.text, fontFamily: 'SpaceGrotesk_400Regular', fontSize: 15 },
+    pickerButton: { borderWidth: 1, borderColor: colors.icon, padding: 12, borderRadius: 10, backgroundColor: colors.background },
+    pickerButtonText: { color: colors.text, fontFamily: 'SpaceGrotesk_400Regular', fontSize: 15 },
+    cancelText: { color: colors.icon, fontFamily: 'SpaceGrotesk_400Regular', textAlign: 'center', marginTop: 12, fontSize: 15 },
   });
